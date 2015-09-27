@@ -1,52 +1,168 @@
-# Load our dotfiles like ~/.bash_prompt, etc…
-#   ~/.extra can be used for settings you don’t want to commit,
-#   Use it to configure your PATH, thus it being first in line.
-for file in ~/.{extra,bash_prompt,exports,aliases,functions}; do
-    [ -r "$file" ] && source "$file"
-done
-unset file
+# This prompt inspired by gf3, sindresorhus, alrra, and mathiasbynens.
+# but customized to me. <3
 
-ln -sf "$(brew --prefix)/share/git-core/contrib/diff-highlight/diff-highlight" ~/bin/diff-highlight
+default_username='rhilliard'
 
-# generic colouriser
-GRC=`which grc`
-if [ "$TERM" != dumb ] && [ -n "$GRC" ]
-    then
-        alias colourify="$GRC -es --colour=auto"
-        alias configure='colourify ./configure'
-        for app in {diff,make,gcc,g++,ping,traceroute}; do
-            alias "$app"='colourify '$app
-    done
+
+if [[ -n "$ZSH_VERSION" ]]; then  # quit now if in zsh
+    return 1 2> /dev/null || exit 1;
+fi;
+
+
+if [[ $COLORTERM = gnome-* && $TERM = xterm ]] && infocmp gnome-256color >/dev/null 2>&1; then
+    export TERM=gnome-256color
+elif infocmp xterm-256color >/dev/null 2>&1; then
+    export TERM=xterm-256color
 fi
 
-# Save and reload the history after each command finishes
-export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
-# bash completion.
-if  which brew > /dev/null && [ -f "$(brew --prefix)/share/bash-completion/bash_completion" ]; then
-    source "$(brew --prefix)/share/bash-completion/bash_completion";
-elif [ -f /etc/bash_completion ]; then
-    source /etc/bash_completion;
-fi;
+set_prompts() {
 
-# Enable tab completion for `g` by marking it as an alias for `git`
-if type __git_complete &> /dev/null; then
-    __git_complete g __git_main
-fi;
+    local black="" blue="" bold="" cyan="" green="" orange="" \
+          purple="" red="" reset="" white="" yellow=""
 
-# Add tab completion for SSH hostnames based on ~/.ssh/config, ignoring wildcards
-[ -e "$HOME/.ssh/config" ] && complete -o "default" -o "nospace" -W "$(grep "^Host" ~/.ssh/config | grep -v "[?*]" | cut -d " " -f2)" scp sftp ssh
+    local dateCmd=""
 
-##
-## better `cd`'ing
-##
+    if [ -x /usr/bin/tput ] && tput setaf 1 &> /dev/null; then
 
-# Case-insensitive globbing (used in pathname expansion)
-shopt -s nocaseglob;
+        tput sgr0 # Reset colors
 
-# Autocorrect typos in path names when using `cd`
-shopt -s cdspell;
+        bold=$(tput bold)
+        reset=$(tput sgr0)
 
-export NVM_DIR="/Users/rhilliar/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-export PATH=$PATH:/export/content/linkedin/bin
+        # Solarized colors
+        # (https://github.com/altercation/solarized/tree/master/iterm2-colors-solarized#the-values)
+        black=$(tput setaf 0)
+        blue=$(tput setaf 33)
+        cyan=$(tput setaf 37)
+        green=$(tput setaf 190)
+        orange=$(tput setaf 172)
+        purple=$(tput setaf 141)
+        red=$(tput setaf 124)
+        violet=$(tput setaf 61)
+        magenta=$(tput setaf 9)
+        white=$(tput setaf 8)
+        yellow=$(tput setaf 136)
+
+    else
+
+        bold=""
+        reset="\e[0m"
+
+        black="\e[1;30m"
+        blue="\e[1;34m"
+        cyan="\e[1;36m"
+        green="\e[1;32m"
+        orange="\e[1;33m"
+        purple="\e[1;35m"
+        red="\e[1;31m"
+        magenta="\e[1;31m"
+        violet="\e[1;35m"
+        white="\e[1;37m"
+        yellow="\e[1;33m"
+
+    fi
+
+    # Only show username/host if not default
+    function usernamehost() {
+
+        # Highlight the user name when logged in as root.
+        if [[ "${USER}" == *"root" ]]; then
+            userStyle="${red}";
+        else
+            userStyle="${magenta}";
+        fi;
+
+        userhost=""
+        userhost+="\[${userStyle}\]$USER "
+        # userhost+="${white}at "
+        # userhost+="${orange}$HOSTNAME "
+        userhost+="${white}in"
+
+        if [ $USER != "$default_username" ]; then echo $userhost ""; fi
+    }
+
+
+    function prompt_git() {
+        # this is >5x faster than mathias's. has to be for working in Chromium & Blink.
+
+        # check if we're in a git repo. (fast)
+        git rev-parse --is-inside-work-tree &>/dev/null || return
+
+        # check for what branch we're on. (fast)
+        #   if… HEAD isn’t a symbolic ref (typical branch),
+        #   then… get a tracking remote branch or tag
+        #   otherwise… get the short SHA for the latest commit
+        #   lastly just give up.
+        branchName="$(git symbolic-ref --quiet --short HEAD 2> /dev/null || \
+            git describe --all --exact-match HEAD 2> /dev/null || \
+            git rev-parse --short HEAD 2> /dev/null || \
+            echo '(unknown)')";
+
+
+        ## early exit for Chromium & Blink repo, as the dirty check takes ~5s
+        repoUrl=$(git config --get remote.origin.url)
+        if grep -q chromium.googlesource.com <<<$repoUrl; then
+            dirty=" ⁂"
+        else
+
+            # check if it's dirty (slow)
+            #   technique via github.com/git/git/blob/355d4e173/contrib/completion/git-prompt.sh#L472-L475
+            dirty=$(git diff --no-ext-diff --quiet --ignore-submodules --exit-code || echo -e "*")
+
+            # mathias has a few more checks some may like:
+            #    github.com/mathiasbynens/dotfiles/blob/a8bd0d4300/.bash_prompt#L30-L43
+        fi
+
+
+        [ -n "${s}" ] && s=" [${s}]";
+        echo -e "${1}${branchName}${2}$dirty";
+
+        return
+    }
+
+
+
+    # ------------------------------------------------------------------
+    # | Prompt string                                                  |
+    # ------------------------------------------------------------------
+
+    PS1="\[\033]0;\w\007\]"                                 # terminal title (set to the current working directory)
+    PS1+="\n\[$bold\]"
+    PS1+="\[$(usernamehost)\]"                              # username at host
+    PS1+="\[$green\]\w"                                     # working directory
+    PS1+="\$(prompt_git \"$white on $purple\" \"$cyan\")"   # git repository details
+    PS1+="\n"
+    PS1+="\[$reset$white\]\\$ \[$reset\]"
+
+    export PS1
+
+    # ------------------------------------------------------------------
+    # | Subshell prompt string                                         |
+    # ------------------------------------------------------------------
+
+    export PS2="⚡ "
+
+    # ------------------------------------------------------------------
+    # | Debug prompt string  (when using `set -x`)                     |
+    # ------------------------------------------------------------------
+
+    # When debugging a shell script via `set -x` this tricked-out prompt is used.
+
+    # The first character (+) is used and repeated for stack depth
+    # Then, we log the current time, filename and line number, followed by function name, followed by actual source line
+
+    # FWIW, I have spent hours attempting to get time-per-command in here, but it's not possible. ~paul
+    export PS4='+ \011\e[1;30m\t\011\e[1;34m${BASH_SOURCE}\e[0m:\e[1;36m${LINENO}\e[0m \011 ${FUNCNAME[0]:+\e[0;35m${FUNCNAME[0]}\e[1;30m()\e[0m:\011\011 }'
+
+
+    # shoutouts:
+    #   https://github.com/dholm/dotshell/blob/master/.local/lib/sh/profile.sh is quite nice.
+    #   zprof is also hot.
+
+}
+
+
+
+set_prompts
+unset set_prompts
