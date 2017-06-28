@@ -37,18 +37,14 @@ alias ips="ifconfig -a | perl -nle'/(\d+\.\d+\.\d+\.\d+)/ && print $1'"
 # Shortcuts
 alias g="git"
 alias gs="git status"
-alias dumb="ulimit -n 2048"
-alias sshlinux="ssh 172.23.83.159"
-alias madmen="cd ~/Repositories/tscp-admin-frontend/;
-      atom .;
+alias rst="git fetch origin && git reset --hard origin/master"
+alias dumb="ulimit -n 9999"
+alias sshlinux="ssh rhilliar-ld2"
+# alias $LEOHOME="~/Repositories/network/";
+alias madmen="cd ~/Repositories/tscp-admin-frontend_trunk/;
       play run;
       open https://www.linkedin-ei.com/ad/;
       ulimit -n 2048"
-alias voyager="cd ~/Repositories/voyager-web/;
-      atom .;
-      ./pemberly serve;
-      open https://www.pemberly.www.linkedin.com:4443/messaging;
-      open https://www.pemberly.www.linkedin-ei.com:4443/messaging"
 alias dl="cd ~/Downloads"
 alias dt="cd ~/Desktop"
 alias r="cd ~/Repositories"
@@ -58,12 +54,21 @@ alias o="open"
 alias oo="open ."
 alias a="atom ."
 
-# LinkedIn Stuff
-alias nuke="./pemberly nom && ./pemberly serve"
-alias tst="./pemberly ember test --filter='messaging'"
-alias tsts="./pemberly ember test --filter='messaging' --serve"
+# LinkedIn Messaging Stuff
+alias cdv="cd ~/Repositories/voyager-web_trunk/"
+alias voyager="cd ~/Repositories/voyager-web_trunk/;
+      sublime app;
+      just init;
+      just serve;
+      open https://pemberly.www.linkedin.com:4443/m/messaging/"
+alias nuke="cdv && fuck java && fuck ember && fuck node && git update && rm -rf  ~/.just/voyager-web/* tmp build bower_components node_modules dist && npm cache clear && just init --clean && just serve"
+alias tst="just ember test --path=dist --filter='messaging'"
 
-alias gitsshclone="git clone git+ssh://rhilliar@172.23.83.159/~/workspace/madmen"
+# Heliosphere
+alias htst="heliosphere --env local --mode desktop --intercept 5000 --test_config perf-test/test_config.xml --report true --plot true --total_runs 10 --kill 1 --skip_build true --sha1 master --email true"
+alias rtst="heliosphere --env remote --mode desktop --intercept 5000 --test_config perf-test/test_config.xml --report true --plot true --total_runs 20 --kill 5 --sha1 master --email true"
+alias etst="heliosphere --env local --mode desktop --intercept 5000 --test_config perf-test/test_config.xml --report true --plot true --total_runs 30 --kill 1 --skip_build true --sha1 0aa9e35642 --email true"
+
 
 # List ALL files (colorized() in long format, show permissions in octal
 alias la="ls -l | awk '
