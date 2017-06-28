@@ -3,18 +3,88 @@ function md() {
   mkdir -p "$@" && cd "$@"
 }
 
+# Just test serve with filter argument
+function jtest() {
+  just ember test --filter="$1" --serve
+}
 
 # find shorthand
 function f() {
     find . -name "$1" 2>&1 | grep -v 'Permission denied'
 }
 
+# bem lint a file
+function bemlint() {
+  echo -n "Enter the path to the file to lint: "
+  read bem_path
+  just node node_modules/.bin/stylelint ${bem_path}
+}
 
 # cd into whatever is the forefront Finder window.
 cdf() {  # short for cdfinder
   cd "`osascript -e 'tell app "Finder" to POSIX path of (insertion location as alias)'`"
 }
 
+# Copy file or folder to linux
+function cplinux() {
+  echo -n "local path to the file or folder to copy: "
+  read local_path
+
+  echo -n "Path from ~/ to copy folder or file to on the linux box (like: 'Projects/voyager-web_trunk'): "
+  read linux_path
+
+  scp -rp "${local_path}" rhilliar-ld2.linkedin.biz:~/"${local_path}"
+}
+
+
+# Fix CRT in one GO
+function fixCrt() {
+  echo -n "What version number? "
+  read version_number
+  echo -n "What stage? (production, staging) "
+  read stage
+  echo -n "mark as what? (options are: nominate, denominate, rollback, rolledback, canary-healthy, canary-sick, canary-promote, canaried, deployed) "
+  read mark_type
+
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-lva1 -t voyager-web."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-lva1 -t voyager-web.messaging."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-lsg1 -t voyager-web."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-lsg1 -t voyager-web.messaging."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-lor1 -t voyager-web."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-lor1 -t voyager-web.messaging."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-ltx1 -t voyager-web."${stage}" -v "${version_number}" &&
+  crt req -a "${mark_type}" -k Multiproduct -s voyager-web -f prod-ltx1 -t voyager-web.messaging."${stage}" -v "${version_number}"
+}
+
+# Sync Branch with full remote pull |  Try CAP 'git update' first
+function syncbranch() {
+  branch=$(prompt_git)
+  echo "Current branch to be sync'd: ${branch}"
+  git checkout master &&
+  mint update &&
+  git checkout "${branch}" &&
+  git rebase master &&
+  echo "You just synced your branch to master :)" &&
+  echo "Now we're gunna just init" &&
+  just init &&
+  echo "Starting the server" &&
+  just serve
+}
+
+# Submit branch
+function submitbranch() {
+  branch=$(prompt_git)
+  rb_id=$(git reviewid)
+  git update &&
+  git checkout master
+  git merge --squash "${branch}"
+  echo -n "Enter your commit message: "
+  read commit_message
+  git commit -n -m "$commit_message" -a
+  echo "dcomitting RB ${rb_id}"
+  git review dcommit -r ${rb_id}
+  git commit --amend
+}
 
 # Start an HTTP server from a directory, optionally specifying the port
 function server() {
