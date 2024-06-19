@@ -1,104 +1,30 @@
-# Enable aliases to be sudo’ed
-alias sudo='sudo '
-
-# Easier navigation: .., ..., ~ and -
+alias ll="ls -lah"
+alias la="ls -A"
+alias l="ls -CF"
+alias gs="git status"
+alias ga="git add"
+alias gc="git commit"
+alias gp="git push"
+alias gl="git log"
 alias ..="cd .."
-alias cd..="cd .."
 alias ...="cd ../.."
 alias ....="cd ../../.."
-alias .....="cd ../../../.."
-alias ~="cd ~" # `cd` is probably faster to type though
-
-# use coreutils `ls` if possible…
-hash gls >/dev/null 2>&1 || alias gls="ls"
-
-# Detect which `ls` flavor is in use
-if ls --color > /dev/null 2>&1; then # GNU `ls`
-    colorflag="--color"
-else # OS X `ls`
-    colorflag="-G"
-fi
-
-# List all files colorized in long format
-alias l="ls -l ${colorflag}"
-
-# List all files colorized in long format, including dot files
-alias la="ls -la ${colorflag}"
-
-# Always use color output for `ls`
-alias ls="command ls ${colorflag}"
-export LS_COLORS='no=00:fi=00:di=01;34:ln=01;36:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arj=01;31:*.taz=01;31:*.lzh=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.gz=01;31:*.bz2=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.avi=01;35:*.fli=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.ogg=01;35:*.mp3=01;35:*.wav=01;35:'
-
-# IP addresses
-alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
-alias localip="ipconfig getifaddr en0"
-alias ips="ifconfig -a | perl -nle'/(\d+\.\d+\.\d+\.\d+)/ && print $1'"
-
-# Shortcuts
-alias g="git"
-alias gs="git status"
-alias rst="git fetch origin && git reset --hard origin/master"
-alias dumb="ulimit -n 9999"
-alias sshlinux="ssh rhilliar-ld2"
-# alias $LEOHOME="~/Repositories/network/";
-alias madmen="cd ~/Repositories/tscp-admin-frontend_trunk/;
-      play run;
-      open https://www.linkedin-ei.com/ad/;
-      ulimit -n 2048"
-alias dl="cd ~/Downloads"
-alias dt="cd ~/Desktop"
-alias r="cd ~/Repositories"
+alias grep="grep --color=auto"
+alias df="df -h"
+alias du="du -h"
+alias mkdir="mkdir -p"
+alias cp="cp -i"
+alias mv="mv -i"
+alias rm="rm -i"
+alias cls="clear"
 alias h="history"
-alias j="jobs"
-alias o="open"
-alias oo="open ."
-alias a="atom ."
-
-# LinkedIn Messaging Stuff
-alias cdv="cd ~/Repositories/voyager-web_trunk/"
-alias voyager="cd ~/Repositories/voyager-web_trunk/;
-      sublime app;
-      just init;
-      just serve;
-      open https://pemberly.www.linkedin.com:4443/m/messaging/"
-alias nuke="cdv && fuck java && fuck ember && fuck node && git update && rm -rf  ~/.just/voyager-web/* tmp build bower_components node_modules dist && npm cache clear && just init --clean && just serve"
-alias tst="just ember test --path=dist --filter='messaging'"
-
-# Heliosphere
-alias htst="heliosphere --env local --mode desktop --intercept 5000 --test_config perf-test/test_config.xml --report true --plot true --total_runs 10 --kill 1 --skip_build true --sha1 master --email true"
-alias rtst="heliosphere --env remote --mode desktop --intercept 5000 --test_config perf-test/test_config.xml --report true --plot true --total_runs 20 --kill 5 --sha1 master --email true"
-alias etst="heliosphere --env local --mode desktop --intercept 5000 --test_config perf-test/test_config.xml --report true --plot true --total_runs 30 --kill 1 --skip_build true --sha1 0aa9e35642 --email true"
-
-
-# List ALL files (colorized() in long format, show permissions in octal
-alias la="ls -l | awk '
-{
-  k=0;
-  for (i=0;i<=8;i++)
-    k+=((substr(\$1,i+2,1)~/[rwx]/)*2^(8-i));
-  if (k)
-    printf(\"%0o \",k);
-  printf(\" %9s  %3s %2s %5s  %6s  %s %s %s\n\", \$3, \$6, \$7, \$8, \$5, \$9,\$10, \$11);
-}'"
-
-# List only directories
-alias lsd='ls -l | grep "^d"'
-
-# Flush Directory Service cache
-alias flush="dscacheutil -flushcache"
-
-# Recursively delete `.DS_Store` files
-alias cleanup="find . -name '*.DS_Store' -type f -ls -delete"
-
-# Shortcuts
-alias g="git"
-alias v="vim"
-
-# File size
-alias fs="stat -f \"%z bytes\""
-
-# Empty the Trash on all mounted volumes and the main HDD. then clear the useless sleepimage
-alias emptytrash="sudo rm -rfv /Volumes/*/.Trashes; rm -rfv ~/.Trash; sudo rm /private/var/vm/sleepimage"
-
-# Get OS X Software Updates, and update installed Ruby gems, Homebrew, npm, and their installed packages
-alias update='sudo softwareupdate -i -a; brew update; brew upgrade; brew cleanup; npm update npm -g; npm update -g; sudo gem update'
+alias update="sudo apt-get update && sudo apt-get upgrade ; cleanup"
+alias path='echo -e ${PATH//:/\\n}'
+alias rst="git fetch origin && git reset --hard origin/main"
+alias aliases="cat ~/.aliases"
+alias reload='source ~/.zshrc'
+alias zshconfig='code $HOME/.zshrc'
+alias cleanup="sudo apt-get autoremove && sudo apt-get autoclean && sudo apt-get clean"
+alias zshconfig="code ~/.zshrc"
+alias ohmyzsh="code ~/.oh-my-zsh"
+alias cat="bat --style=plain --paging=never"
